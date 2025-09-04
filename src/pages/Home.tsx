@@ -32,12 +32,7 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-background text-foreground">
       {/* Hero Section */}
-      <section className="relative min-h-[90vh] flex items-center justify-center overflow-hidden bg-gradient-to-br from-primary/10 via-background to-primary/5">
-        <div 
-          className="absolute inset-0 bg-cover bg-center bg-no-repeat opacity-10"
-          style={{ backgroundImage: `url(${heroImage})` }}
-        />
-        
+      <section className="relative min-h-[90vh] flex items-center justify-center overflow-hidden bg-gradient-to-br from-primary/25 via-background to-primary/20">
         <div className="relative z-10 container mx-auto px-4 text-center">
           <div className="space-y-6">
             <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold leading-tight">
@@ -61,18 +56,6 @@ export default function Home() {
                 </Button>
               </Link>
             </div>
-          </div>
-        </div>
-
-        {/* Floating Elements */}
-        <div className="absolute top-20 left-10 hidden lg:block">
-          <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center">
-            <Zap className="h-8 w-8 text-primary" />
-          </div>
-        </div>
-        <div className="absolute bottom-20 right-10 hidden lg:block">
-          <div className="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center">
-            <Shield className="h-10 w-10 text-primary" />
           </div>
         </div>
       </section>
