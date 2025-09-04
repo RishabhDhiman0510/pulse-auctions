@@ -30,32 +30,33 @@ export default function Home() {
   ];
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen bg-background text-foreground">
       {/* Hero Section */}
-      <section className="relative hero-background min-h-[90vh] flex items-center justify-center overflow-hidden">
+      <section className="relative min-h-[90vh] flex items-center justify-center overflow-hidden bg-gradient-to-br from-primary/10 via-background to-primary/5">
         <div 
-          className="absolute inset-0 bg-cover bg-center bg-no-repeat opacity-20"
+          className="absolute inset-0 bg-cover bg-center bg-no-repeat opacity-10"
           style={{ backgroundImage: `url(${heroImage})` }}
         />
-        <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-primary-glow/10" />
         
         <div className="relative z-10 container mx-auto px-4 text-center">
-          <div className="animate-fade-up">
-            <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold mb-6 leading-tight">
-              Where <span className="gradient-text">Exceptional Items</span>
+          <div className="space-y-6">
+            <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold leading-tight">
+              Where <span className="text-primary">Exceptional Items</span>
               <br />
               Find Their Perfect Owner
             </h1>
-            <p className="text-xl md:text-2xl text-muted-foreground mb-8 max-w-3xl mx-auto">
+            <p className="text-xl md:text-2xl text-muted-foreground max-w-3xl mx-auto">
               Discover rare treasures, place winning bids, and connect with a global community of passionate collectors in real-time.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Button size="lg" className="btn-hero text-lg px-8 py-6">
-                Get Started
-                <ArrowRight className="ml-2 h-5 w-5" />
-              </Button>
+              <Link to="/login">
+                <Button size="lg" className="bg-primary hover:bg-primary/90 text-primary-foreground text-lg px-8 py-6">
+                  Get Started
+                  <ArrowRight className="ml-2 h-5 w-5" />
+                </Button>
+              </Link>
               <Link to="/auctions">
-                <Button size="lg" variant="outline" className="btn-ghost-purple text-lg px-8 py-6">
+                <Button size="lg" variant="outline" className="text-lg px-8 py-6">
                   Browse Auctions
                 </Button>
               </Link>
@@ -64,14 +65,14 @@ export default function Home() {
         </div>
 
         {/* Floating Elements */}
-        <div className="absolute top-20 left-10 animate-float hidden lg:block">
-          <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center animate-glow">
+        <div className="absolute top-20 left-10 hidden lg:block">
+          <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center">
             <Zap className="h-8 w-8 text-primary" />
           </div>
         </div>
-        <div className="absolute bottom-20 right-10 animate-float hidden lg:block" style={{ animationDelay: "1s" }}>
-          <div className="w-20 h-20 bg-primary-glow/10 rounded-full flex items-center justify-center animate-glow">
-            <Shield className="h-10 w-10 text-primary-glow" />
+        <div className="absolute bottom-20 right-10 hidden lg:block">
+          <div className="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center">
+            <Shield className="h-10 w-10 text-primary" />
           </div>
         </div>
       </section>
@@ -88,10 +89,10 @@ export default function Home() {
           
           <div className="grid md:grid-cols-3 gap-8">
             {features.map((feature, index) => (
-              <Card key={index} className="card-elegant hover:card-glow transition-all duration-500 group">
+              <Card key={index} className="bg-card border transition-all duration-300 hover:shadow-lg group">
                 <CardContent className="p-8 text-center">
-                  <div className="w-16 h-16 bg-gradient-primary rounded-full flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform duration-300">
-                    <feature.icon className="h-8 w-8 text-white" />
+                  <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-6 group-hover:bg-primary/20 transition-colors">
+                    <feature.icon className="h-8 w-8 text-primary" />
                   </div>
                   <h3 className="text-xl font-semibold mb-4">{feature.title}</h3>
                   <p className="text-muted-foreground">{feature.description}</p>
