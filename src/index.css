@@ -187,7 +187,12 @@
   .btn-hero {
     background: var(--gradient-primary);
     box-shadow: var(--shadow-elegant);
-    @apply text-white border-0 hover:shadow-glow transform hover:scale-105 transition-all duration-300;
+    @apply text-white border-0 transform transition-all duration-300;
+  }
+
+  .btn-hero:hover {
+    box-shadow: var(--shadow-glow);
+    @apply scale-105;
   }
 
   .btn-ghost-purple {
@@ -235,15 +240,5 @@
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
-  }
-}
-
-@layer base {
-  * {
-    @apply border-border;
-  }
-
-  body {
-    @apply bg-background text-foreground;
   }
 }
