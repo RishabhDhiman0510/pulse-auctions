@@ -42,7 +42,10 @@ export function AppLayout() {
           />
         )}
         
-        <main className={`flex-1 ${showSidebar ? 'md:ml-80' : ''} transition-all duration-300`}>
+        <main 
+          className={`flex-1 ${showSidebar ? 'md:ml-80' : ''} transition-all duration-300`}
+          onClick={closeSidebar}
+        >
           <Outlet />
         </main>
       </div>

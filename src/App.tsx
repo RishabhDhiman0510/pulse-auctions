@@ -10,6 +10,11 @@ import Login from "./pages/Login";
 import BrowseAuctions from "./pages/BrowseAuctions";
 import Dashboard from "./pages/Dashboard";
 import AuctionDetails from "./pages/AuctionDetails";
+import CreateAuction from "./pages/CreateAuction";
+import MyAuctions from "./pages/MyAuctions";
+import Watchlist from "./pages/Watchlist";
+import Settings from "./pages/Settings";
+import Help from "./pages/Help";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -28,6 +33,11 @@ const App = () => (
               <Route path="auctions" element={<BrowseAuctions />} />
               <Route path="auction/:id" element={<AuctionDetails />} />
               <Route path="dashboard" element={<Dashboard />} />
+              <Route path="create-auction" element={<CreateAuction />} />
+              <Route path="my-auctions" element={<MyAuctions />} />
+              <Route path="watchlist" element={<Watchlist />} />
+              <Route path="settings" element={<Settings />} />
+              <Route path="help" element={<Help />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Route>
