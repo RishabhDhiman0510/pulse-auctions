@@ -343,15 +343,25 @@ export type Database = {
     }
     Functions: {
       create_notification: {
-        Args: {
-          p_auction_id?: string
-          p_data?: Json
-          p_message: string
-          p_priority?: Database["public"]["Enums"]["enum_notifications_priority"]
-          p_title: string
-          p_type: Database["public"]["Enums"]["enum_notifications_type"]
-          p_user_id: string
-        }
+        Args:
+          | {
+              p_auction_id?: string
+              p_data?: Json
+              p_message: string
+              p_priority?: Database["public"]["Enums"]["enum_notifications_priority"]
+              p_title: string
+              p_type: Database["public"]["Enums"]["enum_notifications_type"]
+              p_user_id: string
+            }
+          | {
+              p_auction_id?: string
+              p_data?: Json
+              p_message: string
+              p_priority?: string
+              p_title: string
+              p_type: string
+              p_user_id: string
+            }
         Returns: string
       }
       update_auction_status: {
