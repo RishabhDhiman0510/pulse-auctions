@@ -16,130 +16,110 @@ export type Database = {
     Tables: {
       auctions: {
         Row: {
-          auto_extend_enabled: boolean | null
-          auto_extend_minutes: number | null
           bid_count: number | null
-          bid_increment: number
-          category: string | null
+          bid_increment: number | null
+          category: string
           condition: string | null
           counter_offer_amount: number | null
           counter_offer_expires_at: string | null
-          created_at: string
+          created_at: string | null
           current_highest_bid: number | null
+          dimensions: string | null
           duration_minutes: number
-          featured: boolean | null
           go_live_at: string
           highest_bidder_id: string | null
           id: string
-          item_description: string | null
+          item_description: string
           item_images: string[] | null
           item_name: string
           location: string | null
           payment_methods: string[] | null
           reserve_price: number | null
-          seller_decision:
-            | Database["public"]["Enums"]["enum_auctions_seller_decision"]
-            | null
+          seller_decision: string | null
           seller_id: string
           shipping_cost: number | null
           shipping_included: boolean | null
           starting_price: number
-          status: Database["public"]["Enums"]["enum_auctions_status"] | null
-          updated_at: string
-          view_count: number | null
+          status: string | null
+          updated_at: string | null
+          views_count: number | null
+          watchers_count: number | null
+          weight: string | null
         }
         Insert: {
-          auto_extend_enabled?: boolean | null
-          auto_extend_minutes?: number | null
           bid_count?: number | null
-          bid_increment: number
-          category?: string | null
+          bid_increment?: number | null
+          category: string
           condition?: string | null
           counter_offer_amount?: number | null
           counter_offer_expires_at?: string | null
-          created_at: string
+          created_at?: string | null
           current_highest_bid?: number | null
+          dimensions?: string | null
           duration_minutes: number
-          featured?: boolean | null
           go_live_at: string
           highest_bidder_id?: string | null
-          id: string
-          item_description?: string | null
+          id?: string
+          item_description: string
           item_images?: string[] | null
           item_name: string
           location?: string | null
           payment_methods?: string[] | null
           reserve_price?: number | null
-          seller_decision?:
-            | Database["public"]["Enums"]["enum_auctions_seller_decision"]
-            | null
+          seller_decision?: string | null
           seller_id: string
           shipping_cost?: number | null
           shipping_included?: boolean | null
           starting_price: number
-          status?: Database["public"]["Enums"]["enum_auctions_status"] | null
-          updated_at: string
-          view_count?: number | null
+          status?: string | null
+          updated_at?: string | null
+          views_count?: number | null
+          watchers_count?: number | null
+          weight?: string | null
         }
         Update: {
-          auto_extend_enabled?: boolean | null
-          auto_extend_minutes?: number | null
           bid_count?: number | null
-          bid_increment?: number
-          category?: string | null
+          bid_increment?: number | null
+          category?: string
           condition?: string | null
           counter_offer_amount?: number | null
           counter_offer_expires_at?: string | null
-          created_at?: string
+          created_at?: string | null
           current_highest_bid?: number | null
+          dimensions?: string | null
           duration_minutes?: number
-          featured?: boolean | null
           go_live_at?: string
           highest_bidder_id?: string | null
           id?: string
-          item_description?: string | null
+          item_description?: string
           item_images?: string[] | null
           item_name?: string
           location?: string | null
           payment_methods?: string[] | null
           reserve_price?: number | null
-          seller_decision?:
-            | Database["public"]["Enums"]["enum_auctions_seller_decision"]
-            | null
+          seller_decision?: string | null
           seller_id?: string
           shipping_cost?: number | null
           shipping_included?: boolean | null
           starting_price?: number
-          status?: Database["public"]["Enums"]["enum_auctions_status"] | null
-          updated_at?: string
-          view_count?: number | null
+          status?: string | null
+          updated_at?: string | null
+          views_count?: number | null
+          watchers_count?: number | null
+          weight?: string | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "auctions_highest_bidder_id_fkey"
-            columns: ["highest_bidder_id"]
-            isOneToOne: false
-            referencedRelation: "users"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "auctions_seller_id_fkey"
-            columns: ["seller_id"]
-            isOneToOne: false
-            referencedRelation: "users"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       bids: {
         Row: {
           auction_id: string
           bid_amount: number
-          bid_source: Database["public"]["Enums"]["enum_bids_bid_source"] | null
+          bid_source: string | null
           bid_time: string | null
-          bid_type: Database["public"]["Enums"]["enum_bids_bid_type"] | null
+          bid_type: string | null
           bidder_id: string
-          client_ip: unknown | null
+          client_ip: string | null
+          created_at: string | null
           id: string
           is_auto_bid: boolean | null
           is_winning_bid: boolean | null
@@ -149,14 +129,13 @@ export type Database = {
         Insert: {
           auction_id: string
           bid_amount: number
-          bid_source?:
-            | Database["public"]["Enums"]["enum_bids_bid_source"]
-            | null
+          bid_source?: string | null
           bid_time?: string | null
-          bid_type?: Database["public"]["Enums"]["enum_bids_bid_type"] | null
+          bid_type?: string | null
           bidder_id: string
-          client_ip?: unknown | null
-          id: string
+          client_ip?: string | null
+          created_at?: string | null
+          id?: string
           is_auto_bid?: boolean | null
           is_winning_bid?: boolean | null
           max_bid_amount?: number | null
@@ -165,13 +144,12 @@ export type Database = {
         Update: {
           auction_id?: string
           bid_amount?: number
-          bid_source?:
-            | Database["public"]["Enums"]["enum_bids_bid_source"]
-            | null
+          bid_source?: string | null
           bid_time?: string | null
-          bid_type?: Database["public"]["Enums"]["enum_bids_bid_type"] | null
+          bid_type?: string | null
           bidder_id?: string
-          client_ip?: unknown | null
+          client_ip?: string | null
+          created_at?: string | null
           id?: string
           is_auto_bid?: boolean | null
           is_winning_bid?: boolean | null
@@ -186,11 +164,45 @@ export type Database = {
             referencedRelation: "auctions"
             referencedColumns: ["id"]
           },
+        ]
+      }
+      categories: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          id: string
+          image_url: string | null
+          is_active: boolean | null
+          name: string
+          parent_id: string | null
+          sort_order: number | null
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          is_active?: boolean | null
+          name: string
+          parent_id?: string | null
+          sort_order?: number | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          is_active?: boolean | null
+          name?: string
+          parent_id?: string | null
+          sort_order?: number | null
+        }
+        Relationships: [
           {
-            foreignKeyName: "bids_bidder_id_fkey"
-            columns: ["bidder_id"]
+            foreignKeyName: "categories_parent_id_fkey"
+            columns: ["parent_id"]
             isOneToOne: false
-            referencedRelation: "users"
+            referencedRelation: "categories"
             referencedColumns: ["id"]
           },
         ]
@@ -198,59 +210,44 @@ export type Database = {
       notifications: {
         Row: {
           auction_id: string | null
-          created_at: string
+          created_at: string | null
           data: Json | null
-          expires_at: string | null
           id: string
-          is_email_sent: boolean | null
-          is_push_sent: boolean | null
           is_read: boolean | null
           message: string
-          priority:
-            | Database["public"]["Enums"]["enum_notifications_priority"]
-            | null
+          priority: string | null
           read_at: string | null
           title: string
-          type: Database["public"]["Enums"]["enum_notifications_type"]
-          updated_at: string
+          type: string
+          updated_at: string | null
           user_id: string
         }
         Insert: {
           auction_id?: string | null
-          created_at: string
+          created_at?: string | null
           data?: Json | null
-          expires_at?: string | null
-          id: string
-          is_email_sent?: boolean | null
-          is_push_sent?: boolean | null
+          id?: string
           is_read?: boolean | null
           message: string
-          priority?:
-            | Database["public"]["Enums"]["enum_notifications_priority"]
-            | null
+          priority?: string | null
           read_at?: string | null
           title: string
-          type: Database["public"]["Enums"]["enum_notifications_type"]
-          updated_at: string
+          type: string
+          updated_at?: string | null
           user_id: string
         }
         Update: {
           auction_id?: string | null
-          created_at?: string
+          created_at?: string | null
           data?: Json | null
-          expires_at?: string | null
           id?: string
-          is_email_sent?: boolean | null
-          is_push_sent?: boolean | null
           is_read?: boolean | null
           message?: string
-          priority?:
-            | Database["public"]["Enums"]["enum_notifications_priority"]
-            | null
+          priority?: string | null
           read_at?: string | null
           title?: string
-          type?: Database["public"]["Enums"]["enum_notifications_type"]
-          updated_at?: string
+          type?: string
+          updated_at?: string | null
           user_id?: string
         }
         Relationships: [
@@ -261,71 +258,84 @@ export type Database = {
             referencedRelation: "auctions"
             referencedColumns: ["id"]
           },
-          {
-            foreignKeyName: "notifications_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "users"
-            referencedColumns: ["id"]
-          },
         ]
       }
       users: {
         Row: {
-          created_at: string
-          email: string
-          full_name: string
+          avatar_url: string | null
+          bio: string | null
+          created_at: string | null
+          email: string | null
+          full_name: string | null
           id: string
-          is_active: boolean | null
-          is_verified: boolean | null
-          last_login_at: string | null
-          login_count: number | null
-          password_hash: string
-          password_reset_expires: string | null
-          password_reset_token: string | null
+          location: string | null
+          member_since: string | null
           phone: string | null
-          profile_image_url: string | null
-          updated_at: string
-          username: string
-          verification_token: string | null
+          rating: number | null
+          total_ratings: number | null
+          updated_at: string | null
+          verified: boolean | null
         }
         Insert: {
-          created_at: string
-          email: string
-          full_name: string
+          avatar_url?: string | null
+          bio?: string | null
+          created_at?: string | null
+          email?: string | null
+          full_name?: string | null
           id: string
-          is_active?: boolean | null
-          is_verified?: boolean | null
-          last_login_at?: string | null
-          login_count?: number | null
-          password_hash: string
-          password_reset_expires?: string | null
-          password_reset_token?: string | null
+          location?: string | null
+          member_since?: string | null
           phone?: string | null
-          profile_image_url?: string | null
-          updated_at: string
-          username: string
-          verification_token?: string | null
+          rating?: number | null
+          total_ratings?: number | null
+          updated_at?: string | null
+          verified?: boolean | null
         }
         Update: {
-          created_at?: string
-          email?: string
-          full_name?: string
+          avatar_url?: string | null
+          bio?: string | null
+          created_at?: string | null
+          email?: string | null
+          full_name?: string | null
           id?: string
-          is_active?: boolean | null
-          is_verified?: boolean | null
-          last_login_at?: string | null
-          login_count?: number | null
-          password_hash?: string
-          password_reset_expires?: string | null
-          password_reset_token?: string | null
+          location?: string | null
+          member_since?: string | null
           phone?: string | null
-          profile_image_url?: string | null
-          updated_at?: string
-          username?: string
-          verification_token?: string | null
+          rating?: number | null
+          total_ratings?: number | null
+          updated_at?: string | null
+          verified?: boolean | null
         }
         Relationships: []
+      }
+      watchlist: {
+        Row: {
+          added_at: string | null
+          auction_id: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          added_at?: string | null
+          auction_id: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          added_at?: string | null
+          auction_id?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "watchlist_auction_id_fkey"
+            columns: ["auction_id"]
+            isOneToOne: false
+            referencedRelation: "auctions"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {
