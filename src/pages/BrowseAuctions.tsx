@@ -1,89 +1,18 @@
 import { useState, useEffect } from "react";
-import { Clock, Users, TrendingUp, Eye, Heart, Filter } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardFooter } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { TrendingUp, Filter } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
-import { useNavigate } from "react-router-dom";
+import { useAuctions } from "@/hooks/useAuctions";
+import { AuctionCard } from "@/components/auction/AuctionCard";
 
-interface Auction {
-  id: string;
-  title: string;
-  description: string;
-  startingPrice: number;
-  currentBid: number;
-  endTime: Date;
-  startTime: Date;
-  duration: number; // in hours
-  seller: string;
-  status: 'live' | 'scheduled' | 'ended';
-  category: string;
-  bidCount: number;
-  image: string;
-  isWatchlisted?: boolean;
-}
-
-// Mock data
-const mockAuctions: Auction[] = [
-  {
-    id: "1",
-    title: "Vintage Rolex Submariner",
-    description: "Rare 1960s Rolex Submariner in excellent condition with original box and papers.",
-    startingPrice: 5000,
-    currentBid: 8500,
-    endTime: new Date(Date.now() + 2 * 60 * 60 * 1000), // 2 hours from now
-    startTime: new Date(Date.now() - 24 * 60 * 60 * 1000), // started 24 hours ago
-    duration: 48,
-    seller: "TimeCollector",
-    status: 'live',
-    category: "Jewelry & Watches",
-    bidCount: 23,
-    image: "/placeholder.svg",
-    isWatchlisted: false
-  },
-  {
-    id: "2", 
-    title: "Original Picasso Sketch",
-    description: "Authentic Pablo Picasso pencil sketch from his Blue Period, authenticated.",
-    startingPrice: 15000,
-    currentBid: 0,
-    endTime: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days from now
-    startTime: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000), // starts in 2 days
-    duration: 120,
-    seller: "ArtGalleryNYC",
-    status: 'scheduled',
-    category: "Art & Collectibles",
-    bidCount: 0,
-    image: "/placeholder.svg",
-    isWatchlisted: true
-  },
-  {
-    id: "3",
-    title: "1965 Ford Mustang Convertible",
-    description: "Classic 1965 Ford Mustang convertible, fully restored with original V8 engine.",
-    startingPrice: 25000,
-    currentBid: 32000,
-    endTime: new Date(Date.now() - 2 * 60 * 60 * 1000), // ended 2 hours ago
-    startTime: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000), // started 7 days ago
-    duration: 168,
-    seller: "ClassicCars",
-    status: 'ended',
-    category: "Vehicles",
-    bidCount: 45,
-    image: "/placeholder.svg",
-    isWatchlisted: false
-  }
-];
 
 export default function BrowseAuctions() {
-  const [auctions, setAuctions] = useState<Auction[]>(mockAuctions);
-  const [filteredAuctions, setFilteredAuctions] = useState<Auction[]>(mockAuctions);
+  const { auctions, loading, fetchAuctions } = useAuctions();
+  const [filteredAuctions, setFilteredAuctions] = useState(auctions);
   const [statusFilter, setStatusFilter] = useState("all");
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [sortBy, setSortBy] = useState("ending-soon");
-  const navigate = useNavigate();
 
   const categories = [
     "Art & Collectibles",
@@ -96,88 +25,39 @@ export default function BrowseAuctions() {
     "Books & Manuscripts"
   ];
 
-  const formatTimeRemaining = (endTime: Date, status: string) => {
-    if (status === 'ended') return 'Auction ended';
-    if (status === 'scheduled') return `Starts ${new Date(endTime).toLocaleDateString()}`;
-    
-    const now = new Date();
-    const diff = endTime.getTime() - now.getTime();
-    
-    if (diff <= 0) return 'Auction ended';
-    
-    const hours = Math.floor(diff / (1000 * 60 * 60));
-    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-    
-    if (hours > 24) {
-      const days = Math.floor(hours / 24);
-      return `${days}d ${hours % 24}h remaining`;
-    }
-    
-    return `${hours}h ${minutes}m remaining`;
-  };
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'live': return 'status-live';
-      case 'scheduled': return 'status-scheduled';
-      case 'ended': return 'status-ended';
-      default: return '';
-    }
-  };
-
-  const toggleWatchlist = (auctionId: string) => {
-    setAuctions(prev => 
-      prev.map(auction => 
-        auction.id === auctionId 
-          ? { ...auction, isWatchlisted: !auction.isWatchlisted }
-          : auction
-      )
-    );
-  };
-
   // Filter and sort auctions
   useEffect(() => {
-    let filtered = auctions;
+    fetchAuctions(statusFilter, categoryFilter, searchQuery);
+  }, [statusFilter, categoryFilter, searchQuery]);
 
-    // Filter by status
-    if (statusFilter !== "all") {
-      filtered = filtered.filter(auction => auction.status === statusFilter);
-    }
-
-    // Filter by category
-    if (categoryFilter !== "all") {
-      filtered = filtered.filter(auction => auction.category === categoryFilter);
-    }
-
-    // Filter by search query
-    if (searchQuery) {
-      filtered = filtered.filter(auction =>
-        auction.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        auction.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        auction.seller.toLowerCase().includes(searchQuery.toLowerCase())
-      );
-    }
+  useEffect(() => {
+    let filtered = [...auctions];
 
     // Sort auctions
     filtered.sort((a, b) => {
+      const aCurrentBid = a.current_highest_bid > 0 ? a.current_highest_bid : a.starting_price;
+      const bCurrentBid = b.current_highest_bid > 0 ? b.current_highest_bid : b.starting_price;
+      
       switch (sortBy) {
         case 'ending-soon':
-          return a.endTime.getTime() - b.endTime.getTime();
+          const aEndTime = new Date(a.go_live_at).getTime() + a.duration_minutes * 60 * 1000;
+          const bEndTime = new Date(b.go_live_at).getTime() + b.duration_minutes * 60 * 1000;
+          return aEndTime - bEndTime;
         case 'newest':
-          return b.startTime.getTime() - a.startTime.getTime();
+          return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
         case 'price-low':
-          return (a.currentBid || a.startingPrice) - (b.currentBid || b.startingPrice);
+          return aCurrentBid - bCurrentBid;
         case 'price-high':
-          return (b.currentBid || b.startingPrice) - (a.currentBid || a.startingPrice);
+          return bCurrentBid - aCurrentBid;
         case 'most-bids':
-          return b.bidCount - a.bidCount;
+          return b.bid_count - a.bid_count;
         default:
           return 0;
       }
     });
 
     setFilteredAuctions(filtered);
-  }, [auctions, statusFilter, categoryFilter, searchQuery, sortBy]);
+  }, [auctions, sortBy]);
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -243,92 +123,26 @@ export default function BrowseAuctions() {
       </div>
 
       {/* Auction Grid */}
-      <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-        {filteredAuctions.map((auction) => (
-          <Card key={auction.id} className="card-elegant hover:card-glow transition-all duration-300 group cursor-pointer">
-            <div onClick={() => navigate(`/auction/${auction.id}`)}>
-              <div className="relative">
-                <img
-                  src={auction.image}
-                  alt={auction.title}
-                  className="w-full h-48 object-cover rounded-t-lg"
-                />
-                <Badge className={`absolute top-2 left-2 ${getStatusColor(auction.status)}`}>
-                  {auction.status.charAt(0).toUpperCase() + auction.status.slice(1)}
-                </Badge>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="absolute top-2 right-2 bg-white/80 hover:bg-white"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    toggleWatchlist(auction.id);
-                  }}
-                >
-                  <Heart 
-                    className={`h-4 w-4 ${auction.isWatchlisted ? 'fill-red-500 text-red-500' : 'text-gray-600'}`} 
-                  />
-                </Button>
+      {loading ? (
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          {Array.from({ length: 8 }).map((_, i) => (
+            <div key={i} className="animate-pulse">
+              <div className="bg-secondary/30 h-48 rounded-lg mb-4"></div>
+              <div className="space-y-2">
+                <div className="h-4 bg-secondary/30 rounded w-3/4"></div>
+                <div className="h-3 bg-secondary/30 rounded w-full"></div>
+                <div className="h-3 bg-secondary/30 rounded w-1/2"></div>
               </div>
-
-              <CardContent className="p-4">
-                <h3 className="font-semibold text-lg mb-2 group-hover:text-primary transition-colors line-clamp-1">
-                  {auction.title}
-                </h3>
-                <p className="text-sm text-muted-foreground mb-3 line-clamp-2">
-                  {auction.description}
-                </p>
-                
-                <div className="space-y-2">
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm text-muted-foreground">Current bid:</span>
-                    <span className="font-semibold text-primary">
-                      ${auction.currentBid > 0 ? auction.currentBid.toLocaleString() : auction.startingPrice.toLocaleString()}
-                    </span>
-                  </div>
-                  
-                  <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                    <div className="flex items-center gap-1">
-                      <Users className="h-3 w-3" />
-                      <span>{auction.bidCount} bids</span>
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <Clock className="h-3 w-3" />
-                      <span>{formatTimeRemaining(auction.endTime, auction.status)}</span>
-                    </div>
-                  </div>
-                  
-                  <p className="text-xs text-muted-foreground">
-                    Seller: {auction.seller}
-                  </p>
-                </div>
-              </CardContent>
             </div>
-
-            <CardFooter className="p-4 pt-0">
-              <div className="flex gap-2 w-full">
-                <Button 
-                  size="sm" 
-                  className="flex-1 btn-hero"
-                  onClick={() => navigate(`/auction/${auction.id}`)}
-                  disabled={auction.status === 'ended'}
-                >
-                  {auction.status === 'live' ? 'Bid Now' : 
-                   auction.status === 'scheduled' ? 'View Details' : 
-                   'View Results'}
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => navigate(`/auction/${auction.id}`)}
-                >
-                  <Eye className="h-4 w-4" />
-                </Button>
-              </div>
-            </CardFooter>
-          </Card>
-        ))}
-      </div>
+          ))}
+        </div>
+      ) : (
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          {filteredAuctions.map((auction) => (
+            <AuctionCard key={auction.id} auction={auction} />
+          ))}
+        </div>
+      )}
 
       {filteredAuctions.length === 0 && (
         <div className="text-center py-12">

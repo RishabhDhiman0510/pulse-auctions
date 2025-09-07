@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useAuctions } from "@/hooks/useAuctions";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,6 +17,7 @@ import { useToast } from "@/hooks/use-toast";
 export default function CreateAuction() {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { createAuction } = useAuctions();
   const [startDate, setStartDate] = useState<Date>();
   const [endDate, setEndDate] = useState<Date>();
   const [formData, setFormData] = useState({
@@ -28,13 +30,40 @@ export default function CreateAuction() {
     location: ""
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    toast({
-      title: "Auction Created",
-      description: "Your auction has been successfully created and is pending review.",
-    });
-    navigate("/dashboard");
+    
+    if (!startDate || !endDate) {
+      toast({
+        title: "Missing dates",
+        description: "Please select start and end dates for your auction",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const duration = Math.floor((endDate.getTime() - startDate.getTime()) / (1000 * 60));
+    
+    const auctionData = {
+      item_name: formData.title,
+      item_description: formData.description,
+      category: formData.category,
+      condition: formData.condition,
+      starting_price: parseFloat(formData.startingBid),
+      reserve_price: formData.reservePrice ? parseFloat(formData.reservePrice) : undefined,
+      bid_increment: 1.00,
+      go_live_at: startDate.toISOString(),
+      duration_minutes: duration,
+      location: formData.location,
+      item_images: [],
+    };
+
+    try {
+      await createAuction(auctionData);
+      navigate("/dashboard");
+    } catch (error) {
+      // Error handled in hook
+    }
   };
 
   const handleInputChange = (field: string, value: string) => {

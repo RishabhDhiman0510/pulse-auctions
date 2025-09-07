@@ -1,156 +1,130 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { 
-  Clock, 
-  Users, 
-  TrendingUp, 
+  ArrowLeft,
   Heart, 
   Share2, 
-  ArrowLeft,
-  Gavel,
   User,
-  Calendar,
-  DollarSign,
   History
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
+import { useAuctions, Auction, Bid } from "@/hooks/useAuctions";
+import { useWatchlist } from "@/hooks/useWatchlist";
+import { useAuth } from "@/hooks/useAuth";
+import { BidPlacementForm } from "@/components/auction/BidPlacementForm";
+import { AuctionCountdown } from "@/components/auction/AuctionCountdown";
+import { useAuctionRealtime } from "@/hooks/useRealtime";
 
-interface Bid {
-  id: string;
-  amount: number;
-  bidder: string;
-  timestamp: Date;
-}
-
-interface AuctionDetail {
-  id: string;
-  title: string;
-  description: string;
-  startingPrice: number;
-  currentBid: number;
-  endTime: Date;
-  startTime: Date;
-  seller: string;
-  status: 'live' | 'scheduled' | 'ended';
-  category: string;
-  bidCount: number;
-  images: string[];
-  condition: string;
-  dimensions?: string;
-  weight?: string;
-  bids: Bid[];
-  isWatchlisted: boolean;
-}
-
-// Mock auction data
-const mockAuction: AuctionDetail = {
-  id: "1",
-  title: "Vintage Rolex Submariner",
-  description: "Rare 1960s Rolex Submariner in excellent condition with original box and papers. This timepiece represents the pinnacle of Swiss watchmaking from the golden era of diving watches. The watch has been carefully maintained and shows minimal signs of wear consistent with its age. All original components are present and functioning perfectly. This is a true collector's piece that will only appreciate in value over time.",
-  startingPrice: 5000,
-  currentBid: 8500,
-  endTime: new Date(Date.now() + 2 * 60 * 60 * 1000), // 2 hours from now
-  startTime: new Date(Date.now() - 24 * 60 * 60 * 1000), // started 24 hours ago
-  seller: "TimeCollector",
-  status: 'live',
-  category: "Jewelry & Watches",
-  bidCount: 23,
-  images: ["/placeholder.svg", "/placeholder.svg", "/placeholder.svg"],
-  condition: "Excellent",
-  dimensions: "40mm case diameter",
-  weight: "150g",
-  isWatchlisted: false,
-  bids: [
-    { id: "1", amount: 8500, bidder: "WatchEnthusiast", timestamp: new Date(Date.now() - 30 * 60 * 1000) },
-    { id: "2", amount: 8200, bidder: "CollectorPro", timestamp: new Date(Date.now() - 45 * 60 * 1000) },
-    { id: "3", amount: 8000, bidder: "TimePiece", timestamp: new Date(Date.now() - 60 * 60 * 1000) },
-    { id: "4", amount: 7800, bidder: "VintageSeeker", timestamp: new Date(Date.now() - 75 * 60 * 1000) },
-    { id: "5", amount: 7500, bidder: "RolexFan", timestamp: new Date(Date.now() - 90 * 60 * 1000) },
-  ]
-};
 
 export default function AuctionDetails() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { toast } = useToast();
-  const [auction, setAuction] = useState<AuctionDetail>(mockAuction);
-  const [bidAmount, setBidAmount] = useState("");
+  const { user } = useAuth();
+  const { getAuctionById, getBidsForAuction } = useAuctions();
+  const { isInWatchlist, toggleWatchlist } = useWatchlist();
+  
+  const [auction, setAuction] = useState<Auction | null>(null);
+  const [bids, setBids] = useState<Bid[]>([]);
   const [selectedImage, setSelectedImage] = useState(0);
-  const [timeRemaining, setTimeRemaining] = useState("");
+  const [loading, setLoading] = useState(true);
+  
+  // Real-time updates for this auction
+  const { 
+    currentBid, 
+    bidCount, 
+    isConnected,
+    setCurrentBid,
+    setBidCount 
+  } = useAuctionRealtime(id);
 
-  // Update countdown timer
+  // Load auction data
   useEffect(() => {
-    const interval = setInterval(() => {
-      const now = new Date();
-      const diff = auction.endTime.getTime() - now.getTime();
+    const loadAuction = async () => {
+      if (!id) return;
       
-      if (diff <= 0) {
-        setTimeRemaining("Auction ended");
-        return;
+      setLoading(true);
+      try {
+        const [auctionData, bidsData] = await Promise.all([
+          getAuctionById(id),
+          getBidsForAuction(id)
+        ]);
+        
+        if (auctionData) {
+          setAuction(auctionData);
+          setCurrentBid(auctionData.current_highest_bid);
+          setBidCount(auctionData.bid_count);
+        }
+        
+        setBids(bidsData);
+      } catch (error) {
+        toast({
+          title: "Error loading auction",
+          description: "Could not load auction details",
+          variant: "destructive",
+        });
+      } finally {
+        setLoading(false);
       }
-      
-      const hours = Math.floor(diff / (1000 * 60 * 60));
-      const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-      const seconds = Math.floor((diff % (1000 * 60)) / 1000);
-      
-      if (hours > 24) {
-        const days = Math.floor(hours / 24);
-        setTimeRemaining(`${days}d ${hours % 24}h ${minutes}m`);
-      } else {
-        setTimeRemaining(`${hours}h ${minutes}m ${seconds}s`);
-      }
-    }, 1000);
-
-    return () => clearInterval(interval);
-  }, [auction.endTime]);
-
-  const handleBid = () => {
-    const amount = parseFloat(bidAmount);
-    
-    if (!amount || amount <= auction.currentBid) {
-      toast({
-        title: "Invalid bid",
-        description: `Bid must be higher than current bid of $${auction.currentBid.toLocaleString()}`,
-        variant: "destructive",
-      });
-      return;
-    }
-
-    // Simulate bid placement
-    const newBid: Bid = {
-      id: Date.now().toString(),
-      amount: amount,
-      bidder: "You",
-      timestamp: new Date()
     };
-
-    setAuction(prev => ({
-      ...prev,
-      currentBid: amount,
-      bidCount: prev.bidCount + 1,
-      bids: [newBid, ...prev.bids]
-    }));
-
-    setBidAmount("");
     
-    toast({
-      title: "Bid placed successfully!",
-      description: `Your bid of $${amount.toLocaleString()} has been placed.`,
-    });
+    loadAuction();
+  }, [id]);
+
+  // Update local state when real-time data changes
+  useEffect(() => {
+    if (auction && currentBid !== null) {
+      setAuction(prev => prev ? { ...prev, current_highest_bid: currentBid, bid_count: bidCount } : null);
+    }
+  }, [currentBid, bidCount]);
+
+  const handleBidPlaced = async () => {
+    // Refresh bids after a successful bid
+    if (id) {
+      const updatedBids = await getBidsForAuction(id);
+      setBids(updatedBids);
+    }
   };
 
-  const toggleWatchlist = () => {
-    setAuction(prev => ({ ...prev, isWatchlisted: !prev.isWatchlisted }));
-    toast({
-      title: auction.isWatchlisted ? "Removed from watchlist" : "Added to watchlist",
-      description: auction.isWatchlisted ? "Item removed from your watchlist" : "Item added to your watchlist",
-    });
+  const handleWatchlistToggle = async () => {
+    if (!id) return;
+    await toggleWatchlist(id);
   };
+
+  if (loading) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <div className="animate-pulse space-y-6">
+          <div className="h-8 bg-secondary/30 rounded w-48"></div>
+          <div className="grid lg:grid-cols-3 gap-8">
+            <div className="lg:col-span-2 space-y-6">
+              <div className="h-96 bg-secondary/30 rounded"></div>
+              <div className="h-32 bg-secondary/30 rounded"></div>
+            </div>
+            <div className="space-y-6">
+              <div className="h-64 bg-secondary/30 rounded"></div>
+              <div className="h-48 bg-secondary/30 rounded"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!auction) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold mb-4">Auction not found</h1>
+          <Button onClick={() => navigate(-1)}>Go back</Button>
+        </div>
+      </div>
+    );
+  }
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -160,6 +134,11 @@ export default function AuctionDetails() {
       default: return '';
     }
   };
+
+  const currentBidDisplay = auction.current_highest_bid > 0 ? auction.current_highest_bid : auction.starting_price;
+  const imageUrl = auction.item_images && auction.item_images.length > 0 
+    ? auction.item_images[selectedImage] 
+    : "/placeholder.svg";
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -182,24 +161,26 @@ export default function AuctionDetails() {
               <div className="space-y-4">
                 <div className="aspect-square bg-secondary/30 rounded-lg overflow-hidden">
                   <img
-                    src={auction.images[selectedImage]}
-                    alt={auction.title}
+                    src={imageUrl}
+                    alt={auction.item_name}
                     className="w-full h-full object-cover"
                   />
                 </div>
-                <div className="flex space-x-2 overflow-x-auto">
-                  {auction.images.map((image, index) => (
-                    <button
-                      key={index}
-                      onClick={() => setSelectedImage(index)}
-                      className={`flex-shrink-0 w-20 h-20 bg-secondary/30 rounded-lg overflow-hidden border-2 transition-colors ${
-                        selectedImage === index ? 'border-primary' : 'border-transparent'
-                      }`}
-                    >
-                      <img src={image} alt={`${auction.title} ${index + 1}`} className="w-full h-full object-cover" />
-                    </button>
-                  ))}
-                </div>
+                {auction.item_images && auction.item_images.length > 1 && (
+                  <div className="flex space-x-2 overflow-x-auto">
+                    {auction.item_images.map((image, index) => (
+                      <button
+                        key={index}
+                        onClick={() => setSelectedImage(index)}
+                        className={`flex-shrink-0 w-20 h-20 bg-secondary/30 rounded-lg overflow-hidden border-2 transition-colors ${
+                          selectedImage === index ? 'border-primary' : 'border-transparent'
+                        }`}
+                      >
+                        <img src={image} alt={`${auction.item_name} ${index + 1}`} className="w-full h-full object-cover" />
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
             </CardContent>
           </Card>
@@ -211,13 +192,13 @@ export default function AuctionDetails() {
             </CardHeader>
             <CardContent>
               <p className="text-muted-foreground leading-relaxed">
-                {auction.description}
+                {auction.item_description}
               </p>
               
               <div className="mt-6 grid grid-cols-2 gap-4">
                 <div>
                   <p className="text-sm font-medium">Condition</p>
-                  <p className="text-sm text-muted-foreground">{auction.condition}</p>
+                  <p className="text-sm text-muted-foreground">{auction.condition || 'Not specified'}</p>
                 </div>
                 <div>
                   <p className="text-sm font-medium">Category</p>
@@ -235,6 +216,12 @@ export default function AuctionDetails() {
                     <p className="text-sm text-muted-foreground">{auction.weight}</p>
                   </div>
                 )}
+                {auction.location && (
+                  <div>
+                    <p className="text-sm font-medium">Location</p>
+                    <p className="text-sm text-muted-foreground">{auction.location}</p>
+                  </div>
+                )}
               </div>
             </CardContent>
           </Card>
@@ -249,14 +236,14 @@ export default function AuctionDetails() {
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
-                {auction.bids.map((bid, index) => (
+                {bids.map((bid, index) => (
                   <div key={bid.id} className="flex items-center justify-between p-3 bg-secondary/30 rounded-lg">
                     <div className="flex items-center space-x-3">
                       <div className={`w-2 h-2 rounded-full ${index === 0 ? 'bg-green-500' : 'bg-gray-400'}`} />
                       <div>
-                        <p className="font-medium">${bid.amount.toLocaleString()}</p>
+                        <p className="font-medium">${bid.bid_amount.toLocaleString()}</p>
                         <p className="text-sm text-muted-foreground">
-                          by {bid.bidder} • {bid.timestamp.toLocaleTimeString()}
+                          by Bidder #{bid.bidder_id.slice(-4)} • {new Date(bid.bid_time).toLocaleTimeString()}
                         </p>
                       </div>
                     </div>
@@ -267,6 +254,9 @@ export default function AuctionDetails() {
                     )}
                   </div>
                 ))}
+                {bids.length === 0 && (
+                  <p className="text-center text-muted-foreground py-4">No bids placed yet</p>
+                )}
               </div>
             </CardContent>
           </Card>
@@ -279,18 +269,21 @@ export default function AuctionDetails() {
             <CardHeader>
               <div className="flex items-start justify-between">
                 <div className="flex-1">
-                  <CardTitle className="text-xl mb-2">{auction.title}</CardTitle>
+                  <CardTitle className="text-xl mb-2">{auction.item_name}</CardTitle>
                   <Badge className={getStatusColor(auction.status)}>
                     {auction.status.charAt(0).toUpperCase() + auction.status.slice(1)}
                   </Badge>
+                  {!isConnected && (
+                    <div className="text-xs text-yellow-600 mt-1">Real-time updates disconnected</div>
+                  )}
                 </div>
                 <div className="flex space-x-2">
                   <Button
                     variant="ghost"
                     size="icon"
-                    onClick={toggleWatchlist}
+                    onClick={handleWatchlistToggle}
                   >
-                    <Heart className={`h-5 w-5 ${auction.isWatchlisted ? 'fill-red-500 text-red-500' : ''}`} />
+                    <Heart className={`h-5 w-5 ${isInWatchlist(auction.id) ? 'fill-red-500 text-red-500' : ''}`} />
                   </Button>
                   <Button variant="ghost" size="icon">
                     <Share2 className="h-5 w-5" />
@@ -302,74 +295,35 @@ export default function AuctionDetails() {
               <div>
                 <p className="text-sm text-muted-foreground">Current Bid</p>
                 <p className="text-2xl font-bold text-primary">
-                  ${auction.currentBid.toLocaleString()}
+                  ${currentBidDisplay.toLocaleString()}
                 </p>
               </div>
 
               <div className="grid grid-cols-2 gap-4 text-sm">
                 <div>
                   <p className="text-muted-foreground">Starting Price</p>
-                  <p className="font-medium">${auction.startingPrice.toLocaleString()}</p>
+                  <p className="font-medium">${auction.starting_price.toLocaleString()}</p>
                 </div>
                 <div>
                   <p className="text-muted-foreground">Bids</p>
-                  <p className="font-medium">{auction.bidCount}</p>
+                  <p className="font-medium">{auction.bid_count}</p>
                 </div>
               </div>
 
               <Separator />
 
               <div className="space-y-2">
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-muted-foreground">Time Remaining</span>
-                  <span className="font-medium text-auction-live">{timeRemaining}</span>
-                </div>
+                <AuctionCountdown auction={auction} />
                 <div className="flex items-center justify-between text-sm">
                   <span className="text-muted-foreground">Seller</span>
-                  <span className="font-medium">{auction.seller}</span>
+                  <span className="font-medium">Seller #{auction.seller_id.slice(-6)}</span>
                 </div>
               </div>
             </CardContent>
           </Card>
 
           {/* Bidding */}
-          {auction.status === 'live' && (
-            <Card className="card-elegant">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Gavel className="h-5 w-5" />
-                  Place Bid
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div>
-                  <label className="text-sm text-muted-foreground">
-                    Your bid (minimum: ${(auction.currentBid + 100).toLocaleString()})
-                  </label>
-                  <div className="relative mt-1">
-                    <DollarSign className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-                    <Input
-                      type="number"
-                      placeholder={(auction.currentBid + 100).toString()}
-                      value={bidAmount}
-                      onChange={(e) => setBidAmount(e.target.value)}
-                      className="pl-10"
-                    />
-                  </div>
-                </div>
-                <Button 
-                  onClick={handleBid}
-                  className="w-full btn-hero"
-                  disabled={!bidAmount || parseFloat(bidAmount) <= auction.currentBid}
-                >
-                  Place Bid
-                </Button>
-                <p className="text-xs text-muted-foreground text-center">
-                  By bidding, you agree to our terms and conditions
-                </p>
-              </CardContent>
-            </Card>
-          )}
+          <BidPlacementForm auction={auction} onBidPlaced={handleBidPlaced} />
 
           {/* Seller Info */}
           <Card className="card-elegant">
@@ -385,18 +339,18 @@ export default function AuctionDetails() {
                   <User className="h-5 w-5 text-primary" />
                 </div>
                 <div>
-                  <p className="font-medium">{auction.seller}</p>
+                  <p className="font-medium">Seller #{auction.seller_id.slice(-6)}</p>
                   <p className="text-sm text-muted-foreground">Verified Seller</p>
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-4 text-sm">
                 <div>
                   <p className="text-muted-foreground">Rating</p>
-                  <p className="font-medium">98.5% (247 reviews)</p>
+                  <p className="font-medium">New Seller</p>
                 </div>
                 <div>
                   <p className="text-muted-foreground">Member Since</p>
-                  <p className="font-medium">2019</p>
+                  <p className="font-medium">{new Date(auction.created_at).getFullYear()}</p>
                 </div>
               </div>
               <Button variant="outline" className="w-full">
