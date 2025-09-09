@@ -2,17 +2,14 @@ import { useState, useEffect } from "react";
 import { Outlet, useLocation } from "react-router-dom";
 import { Header } from "./Header";
 import { Sidebar } from "./Sidebar";
+import { useAuth } from "@/hooks/useAuth";
 
 export function AppLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const { user } = useAuth();
   const location = useLocation();
-
-  useEffect(() => {
-    // Check authentication status
-    const token = localStorage.getItem("auth-token");
-    setIsAuthenticated(!!token);
-  }, [location]);
+  
+  const isAuthenticated = !!user;
 
   const toggleSidebar = () => {
     setSidebarOpen(!sidebarOpen);
@@ -22,9 +19,9 @@ export function AppLayout() {
     setSidebarOpen(false);
   };
 
-  // Don't show sidebar on login page or home page
-  const showSidebar = isAuthenticated && location.pathname !== "/" && location.pathname !== "/login";
-  const showSearch = isAuthenticated && location.pathname !== "/" && location.pathname !== "/login";
+  // Don't show sidebar on auth page or home page
+  const showSidebar = isAuthenticated && location.pathname !== "/" && location.pathname !== "/auth";
+  const showSearch = isAuthenticated && location.pathname !== "/" && location.pathname !== "/auth";
 
   return (
     <div className="min-h-screen bg-background flex flex-col">

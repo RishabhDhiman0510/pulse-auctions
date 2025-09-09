@@ -66,13 +66,13 @@ export function Header({ isAuthenticated = false, onToggleSidebar, showSearch = 
             <div className="flex items-center space-x-2">
               <Button
                 variant="ghost"
-                onClick={() => navigate("/login")}
+                onClick={() => navigate("/auth")}
                 className="hidden sm:inline-flex"
               >
                 Sign In
               </Button>
               <Button
-                onClick={() => navigate("/login")}
+                onClick={() => navigate("/auth")}
                 className="btn-hero"
               >
                 Get Started
